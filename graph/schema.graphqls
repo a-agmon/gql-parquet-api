@@ -1,0 +1,16 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type User {
+  id: String!
+  firstName: String!
+  lastName: String!
+  email: String!
+  accountID: String!
+}
+
+type Query {
+  users: [User!]!
+  getUserByEmailDomain(domain: String!): [User!]!
+}
