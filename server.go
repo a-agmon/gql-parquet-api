@@ -3,10 +3,10 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/a-agmon/gql-parquet-api/foundation/aws"
 	"github.com/a-agmon/gql-parquet-api/foundation/data"
 	"github.com/a-agmon/gql-parquet-api/graph"
 )
@@ -14,18 +14,19 @@ import (
 const defaultPort = "8080"
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = defaultPort
+	log.Print("starting server...")
+	awsCred, err := aws.GetAWSCredEnv()
+	if err != nil {
+		log.Fatalf("error getting aws credentials from env: %v", err)
 	}
-
-	dataStore := data.NewStore()
+	dataDriver := data.NewDuckDBDriver(awsCred)
+	dataStore := data.NewStore(dataDriver)
 	resolver := graph.NewResolver(dataStore)
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", srv)
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Printf("connect to http://localhost:%s/ for GraphQL playground", defaultPort)
+	log.Fatal(http.ListenAndServe(":"+defaultPort, nil))
 }
