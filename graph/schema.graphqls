@@ -3,11 +3,11 @@
 # https://gqlgen.com/getting-started/
 
 type User {
-  id: String!
-  firstName: String!
-  lastName: String!
+  user_id: String!
+  acc_id: String!
   email: String!
-  accountID: String!
+  display_name: String!
+  role_name: String!
 }
 
 type Query {
