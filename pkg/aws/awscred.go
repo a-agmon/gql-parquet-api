@@ -20,7 +20,7 @@ func GetAWSCredEnv() (AWSCred, error) {
 		Region:          os.Getenv("AWS_REGION"),
 	}
 	if c.AccessKeyID == "" || c.SecretAccessKey == "" || c.SessionToken == "" || c.Region == "" {
-		return c, errors.New("AWS_ACCESS_KEY_ID is not set")
+		return c, errors.New("one or more of the following env vars are not set: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, AWS_REGION")
 	}
 	return c, nil
 }

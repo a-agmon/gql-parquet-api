@@ -11,10 +11,11 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/a-agmon/gql-parquet-api/foundation/model"
+	"github.com/a-agmon/gql-parquet-api/pkg/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -50,11 +51,11 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
-		AccID       func(childComplexity int) int
-		DisplayName func(childComplexity int) int
-		Email       func(childComplexity int) int
-		RoleName    func(childComplexity int) int
-		UserID      func(childComplexity int) int
+		AccID      func(childComplexity int) int
+		CreatedAt  func(childComplexity int) int
+		Department func(childComplexity int) int
+		Email      func(childComplexity int) int
+		UserID     func(childComplexity int) int
 	}
 }
 
@@ -104,12 +105,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.AccID(childComplexity), true
 
-	case "User.display_name":
-		if e.complexity.User.DisplayName == nil {
+	case "User.created_at":
+		if e.complexity.User.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.User.DisplayName(childComplexity), true
+		return e.complexity.User.CreatedAt(childComplexity), true
+
+	case "User.department":
+		if e.complexity.User.Department == nil {
+			break
+		}
+
+		return e.complexity.User.Department(childComplexity), true
 
 	case "User.email":
 		if e.complexity.User.Email == nil {
@@ -117,13 +125,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.Email(childComplexity), true
-
-	case "User.role_name":
-		if e.complexity.User.RoleName == nil {
-			break
-		}
-
-		return e.complexity.User.RoleName(childComplexity), true
 
 	case "User.user_id":
 		if e.complexity.User.UserID == nil {
@@ -353,10 +354,10 @@ func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field 
 				return ec.fieldContext_User_acc_id(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
-			case "display_name":
-				return ec.fieldContext_User_display_name(ctx, field)
-			case "role_name":
-				return ec.fieldContext_User_role_name(ctx, field)
+			case "department":
+				return ec.fieldContext_User_department(ctx, field)
+			case "created_at":
+				return ec.fieldContext_User_created_at(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -409,10 +410,10 @@ func (ec *executionContext) fieldContext_Query_getUserByEmailDomain(ctx context.
 				return ec.fieldContext_User_acc_id(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
-			case "display_name":
-				return ec.fieldContext_User_display_name(ctx, field)
-			case "role_name":
-				return ec.fieldContext_User_role_name(ctx, field)
+			case "department":
+				return ec.fieldContext_User_department(ctx, field)
+			case "created_at":
+				return ec.fieldContext_User_created_at(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -692,8 +693,8 @@ func (ec *executionContext) fieldContext_User_email(ctx context.Context, field g
 	return fc, nil
 }
 
-func (ec *executionContext) _User_display_name(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_User_display_name(ctx, field)
+func (ec *executionContext) _User_department(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_department(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -706,7 +707,7 @@ func (ec *executionContext) _User_display_name(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.DisplayName, nil
+		return obj.Department, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -723,7 +724,7 @@ func (ec *executionContext) _User_display_name(ctx context.Context, field graphq
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_User_display_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_User_department(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -736,8 +737,8 @@ func (ec *executionContext) fieldContext_User_display_name(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _User_role_name(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_User_role_name(ctx, field)
+func (ec *executionContext) _User_created_at(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_created_at(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -750,7 +751,7 @@ func (ec *executionContext) _User_role_name(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.RoleName, nil
+		return obj.CreatedAt, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -762,19 +763,19 @@ func (ec *executionContext) _User_role_name(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(time.Time)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_User_role_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_User_created_at(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -2681,13 +2682,13 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "display_name":
-			out.Values[i] = ec._User_display_name(ctx, field, obj)
+		case "department":
+			out.Values[i] = ec._User_department(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "role_name":
-			out.Values[i] = ec._User_role_name(ctx, field, obj)
+		case "created_at":
+			out.Values[i] = ec._User_created_at(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -3062,6 +3063,21 @@ func (ec *executionContext) unmarshalNString2string(ctx context.Context, v inter
 
 func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalString(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
+	res, err := graphql.UnmarshalTime(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	res := graphql.MarshalTime(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
