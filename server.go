@@ -6,12 +6,12 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/a-agmon/gql-parquet-api/foundation/aws"
-	"github.com/a-agmon/gql-parquet-api/foundation/data"
 	"github.com/a-agmon/gql-parquet-api/graph"
+	"github.com/a-agmon/gql-parquet-api/pkg/aws"
+	"github.com/a-agmon/gql-parquet-api/pkg/data"
 )
 
-const defaultPort = "8080"
+const defaultPort = "8999"
 
 func main() {
 	log.Print("starting server...")

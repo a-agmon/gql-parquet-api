@@ -1,11 +1,12 @@
-package data
+package sqlhelper
 
 import (
 	"database/sql"
+	"time"
 )
 
+// StringOr returns the string value of v if v is a string, if its nil or if it cannot be casted to string it returns def
 func StringOr(v interface{}, def string) string {
-	// if null return empty string, try to cast to string otherwise empty string
 	if v == nil {
 		return def
 	}
@@ -15,17 +16,25 @@ func StringOr(v interface{}, def string) string {
 	return def
 }
 
-func IntOr(v interface{}, def string) string {
-	// if null return empty string, try to cast to string otherwise empty string
+func IntOr(v interface{}, def int) int {
 	if v == nil {
 		return def
 	}
-	if s, ok := v.(string); ok {
+	if s, ok := v.(int); ok {
 		return s
 	}
 	return def
 }
 
+func TimestampOr(v interface{}, def time.Time) time.Time {
+	if v == nil {
+		return def
+	}
+	if s, ok := v.(time.Time); ok {
+		return s
+	}
+	return def
+}
 
 func ResultSetFromRows(rows *sql.Rows) ([]map[string]interface{}, error) {
 	resultset := make([]map[string]interface{}, 0)

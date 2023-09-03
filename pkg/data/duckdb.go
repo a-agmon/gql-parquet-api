@@ -4,10 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
-	"log"
-
-	"github.com/a-agmon/gql-parquet-api/foundation/aws"
+	"github.com/a-agmon/gql-parquet-api/pkg/aws"
 	"github.com/marcboeker/go-duckdb"
+	"log"
 )
 
 type DuckDBDriver struct {
@@ -73,19 +72,35 @@ func NewDuckDBDriver(cred aws.AWSCred) *DuckDBDriver {
 
 func (d *DuckDBDriver) Execute(statement string) error {
 	log.Printf("Executing statement: \n--\n %s \n---\n", statement)
-	res, err := d.db.Exec(statement)
+	_, err := d.db.Exec(statement)
 	if err != nil {
+		log.Printf("Error executing statement: %v", err)
 		return err
 	}
-	log.Printf("Executed statement with result: %+v", res)
 	return nil
 }
 
 func (d *DuckDBDriver) Query(statement string) (*sql.Rows, error) {
+	log.Printf("Executing query: \n--\n %s \n---\n", statement)
 	rows, err := d.db.Query(statement)
 	if err != nil {
 		return nil, err
 	}
+	return rows, nil
+}
+
+func (d *DuckDBDriver) QueryPreparedStatement(query string, v string) (*sql.Rows, error) {
+	log.Printf("Executing statement: \n--\n %s \n---\n", query)
+	stmt, err := d.db.Prepare(query)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("Executing statement with args: %+v", v)
+	rows, err := stmt.Query(v)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
 	return rows, nil
 }
 

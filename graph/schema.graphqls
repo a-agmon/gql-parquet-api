@@ -2,12 +2,15 @@
 #
 # https://gqlgen.com/getting-started/
 
+scalar Time
+
+#//user_id, acc_id, email, department, created_at
 type User {
   user_id: String!
   acc_id: String!
   email: String!
-  display_name: String!
-  role_name: String!
+  department: String!
+  created_at: Time!
 }
 
 type Query {

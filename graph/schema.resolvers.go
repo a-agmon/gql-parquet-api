@@ -8,7 +8,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/a-agmon/gql-parquet-api/foundation/model"
+	"github.com/a-agmon/gql-parquet-api/pkg/model"
 )
 
 // Users is the resolver for the users field.
@@ -19,12 +19,16 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 		return nil, err
 	}
 	return res, nil
-
 }
 
 // GetUserByEmailDomain is the resolver for the getUserByEmailDomain field.
 func (r *queryResolver) GetUserByEmailDomain(ctx context.Context, domain string) ([]*model.User, error) {
-	return r.db.GetUsers()
+	res, err := r.db.GetUsersByEmailDomain(domain)
+	if err != nil {
+		log.Printf("error GetUsersByEmailDomain : %v", err)
+		return nil, err
+	}
+	return res, nil
 }
 
 // Query returns QueryResolver implementation.
