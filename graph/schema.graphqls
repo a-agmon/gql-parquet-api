@@ -16,4 +16,5 @@ type User {
 type Query {
   users: [User!]!
   getUserByEmailDomain(domain: String!): [User!]!
+  getUsersByEmail(email: String!): [User!]!
 }

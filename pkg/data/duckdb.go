@@ -4,16 +4,17 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
+	"log"
+
 	"github.com/a-agmon/gql-parquet-api/pkg/aws"
 	"github.com/marcboeker/go-duckdb"
-	"log"
 )
 
 type DuckDBDriver struct {
 	db *sql.DB
 }
 
-func getBootQueries(awsAccessKeyID string, awsSecretAccessKey string, awsSessionToken string, awsRegion string) []string {
+func getBootQueries(cred aws.AWSCred) []string {
 	bootQueries := []string{
 		"INSTALL json;",
 		"LOAD json;",
@@ -22,26 +23,27 @@ func getBootQueries(awsAccessKeyID string, awsSecretAccessKey string, awsSession
 		"INSTALL httpfs;",
 		"LOAD httpfs;",
 	}
-	if awsAccessKeyID != "" {
-		bootQueries = append(bootQueries, "SET s3_access_key_id='"+awsAccessKeyID+"';")
+	if cred.AccessKeyID != "" {
+		bootQueries = append(bootQueries, "SET s3_access_key_id='"+cred.AccessKeyID+"';")
 	}
-	if awsSecretAccessKey != "" {
-		bootQueries = append(bootQueries, "SET s3_secret_access_key='"+awsSecretAccessKey+"';")
+	if cred.SecretAccessKey != "" {
+		bootQueries = append(bootQueries, "SET s3_secret_access_key='"+cred.SecretAccessKey+"';")
 	}
-	if awsSessionToken != "" {
-		bootQueries = append(bootQueries, "SET s3_session_token='"+awsSessionToken+"';")
+	if cred.SessionToken != "" {
+		bootQueries = append(bootQueries, "SET s3_session_token='"+cred.SessionToken+"';")
 	}
-	if awsRegion != "" {
-		bootQueries = append(bootQueries, "SET s3_region='"+awsRegion+"';")
+	if cred.Region != "" {
+		bootQueries = append(bootQueries, "SET s3_region='"+cred.Region+"';")
 	}
 	return bootQueries
 }
 
-func initializeDB(awsAccessKeyID string, awsSecretAccessKey string, awsSessionToken string, awsRegion string) (*sql.DB, error) {
-	bootQueries := getBootQueries(awsAccessKeyID, awsSecretAccessKey, awsSessionToken, awsRegion)
+func initializeDB(awsCred aws.AWSCred) (*sql.DB, error) {
+	bootQueries := getBootQueries(awsCred)
 	connector, err := duckdb.NewConnector("", func(execer driver.ExecerContext) error {
 		for _, qry := range bootQueries {
-			_, err := execer.ExecContext(context.Background(), qry, make([]driver.NamedValue, 0))
+			_, err := execer.ExecContext(context.Background(),
+				qry, make([]driver.NamedValue, 0))
 			if err != nil {
 				return err
 			}
@@ -55,8 +57,8 @@ func initializeDB(awsAccessKeyID string, awsSecretAccessKey string, awsSessionTo
 	return db, nil
 }
 
-func NewDuckDBDriver(cred aws.AWSCred) *DuckDBDriver {
-	db, err := initializeDB(cred.AccessKeyID, cred.SecretAccessKey, cred.SessionToken, cred.Region)
+func NewDuckDBDriver(awsCred aws.AWSCred) *DuckDBDriver {
+	db, err := initializeDB(awsCred)
 	if err != nil {
 		panic(err)
 	}
@@ -95,7 +97,6 @@ func (d *DuckDBDriver) QueryPreparedStatement(query string, v string) (*sql.Rows
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("Executing statement with args: %+v", v)
 	rows, err := stmt.Query(v)
 	if err != nil {
 		return nil, err
