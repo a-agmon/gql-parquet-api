@@ -31,6 +31,16 @@ func (r *queryResolver) GetUserByEmailDomain(ctx context.Context, domain string)
 	return res, nil
 }
 
+// GetUsersByEmail is the resolver for the getUsersByEmail field.
+func (r *queryResolver) GetUsersByEmail(ctx context.Context, email string) ([]*model.User, error) {
+	users, err := r.db.GetUsersByEmail(email)
+	if err != nil {
+		log.Printf("error GetUsersByEmail : %v", err)
+		return nil, err
+	}
+	return users, nil
+}
+
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 

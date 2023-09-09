@@ -9,6 +9,7 @@ import (
 
 	"github.com/a-agmon/gql-parquet-api/pkg/data/sqlhelper"
 	"github.com/a-agmon/gql-parquet-api/pkg/model"
+	"github.com/samber/lo"
 )
 
 type DataDriver interface {
@@ -36,8 +37,8 @@ func NewStore(driver DataDriver) *DAO {
 	}
 	return &DAO{driver: driver}
 }
-func (s *DAO) GetUsersByEmailDomain(domain string) ([]*model.User, error) {
-	rows, err := s.driver.QueryPreparedStatement(QryUsersByDomain, domain)
+func (d *DAO) GetUsersByEmail(email string) ([]*model.User, error) {
+	rows, err := d.driver.QueryPreparedStatement(QryUsersByEmail, email)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +47,23 @@ func (s *DAO) GetUsersByEmailDomain(domain string) ([]*model.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("Got resultset: %+v", resultset)
+	users := lo.Map(resultset, func(row map[string]interface{}, index int) *model.User {
+		return newUserFromRow(row)
+	})
+	return users, nil
+}
+func (s *DAO) GetUsersByEmailDomain(domain string) ([]*model.User, error) {
+	formattedDomain := fmt.Sprintf("%%@%s%%", domain)
+	rows, err := s.driver.QueryPreparedStatement(QryUsersByDomain, formattedDomain)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	resultset, err := sqlhelper.ResultSetFromRows(rows)
+	if err != nil {
+		return nil, err
+	}
+	//log.Printf("Got resultset: %+v", resultset)
 	users := make([]*model.User, 0)
 	for _, row := range resultset {
 		user := newUserFromRow(row)
@@ -76,10 +93,10 @@ func (s *DAO) GetUsers() ([]*model.User, error) {
 // user_id, acc_id, email, department, created_at
 func newUserFromRow(row map[string]interface{}) *model.User {
 	user := &model.User{}
-	user.UserID = sqlhelper.StringOr(row["user_id"], "None")
-	user.AccID = sqlhelper.StringOr(row["acc_id"], "None")
+	user.UserID = sqlhelper.StringOr(row["id"], "None")
+	user.AccID = sqlhelper.StringOr(row["account_id"], "None")
 	user.Email = sqlhelper.StringOr(row["email"], "None")
 	user.Department = sqlhelper.StringOr(row["department"], "None")
-	user.CreatedAt = sqlhelper.TimestampOr(row["created_at"], time.Time{})
+	user.CreatedAt = sqlhelper.TimestampOr(row["created_date"], time.Time{})
 	return user
 }
